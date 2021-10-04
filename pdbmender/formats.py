@@ -93,3 +93,15 @@ def get_grobox_size(f_in):
         last_line = lines[-1]
         box = [float(i) * 10 for i in last_line.split()[:3]]
     return box
+
+
+def get_chains_from_file(f_in):
+    chain_list = []
+    with open(f_in) as f:
+        for line in f:
+            if "ATOM " == line[0:5]:
+                pdb_cols = read_pdb_line(line)
+                chain = pdb_cols[3]
+                if chain not in chain_list:
+                    chain_list.append(chain)
+    return chain_list
