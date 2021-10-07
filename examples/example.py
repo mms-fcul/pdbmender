@@ -11,16 +11,16 @@ from pdbmender import (
 )
 from pdbmender.formats import get_chains_from_file
 
-fname = "1CET.pdb"
+fname = "1gjc.pdb"
 ff = "GROMOS"
 sysname = fname.split(".pdb")[0]
 
 pdb_cleaned = f"{sysname}_cleaned.pdb"
 logfile_mend = "LOG_pdb2pqr"
-mend_pdb(fname, pdb_cleaned, ff, ff, logfile=logfile_mend)
+resnumbered = mend_pdb(fname, pdb_cleaned, ff, ff, logfile=logfile_mend)
 
 chains = get_chains_from_file(fname)
-chains_res = identify_tit_sites(fname, chains, add_ser_thr=True)
+chains_res = identify_tit_sites(pdb_cleaned, chains, add_ser_thr=True)
 
 chains_res, cys_bridges = rm_cys_bridges(chains_res, logfile_mend)
 
@@ -35,4 +35,4 @@ for chain, resnumb in new_ctrs.items():
     chains_res[chain][str(resnumb)] = "CTR"
 
 output_pdb = f"{sysname}_final.pdb"
-add_tautomers(pdb_cleaned, chains_res, ff, output_pdb)
+_ = add_tautomers(pdb_cleaned, chains_res, ff, output_pdb)

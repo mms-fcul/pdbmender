@@ -11,14 +11,79 @@ from pdbmender.constants import (
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def mend_pdb(pdb_to_clean, pdb_cleaned, ff, ffout, logfile="LOG_pdb2pqr", hopt=True):
+def correct_insertion_codes(pdb_in, pdb_out, insertion_offset=3000):
+    with open(pdb_in) as f:
+        lines = f.readlines()
+
+    ninsertions = -1
+    inserted_block = None
+    renumbered_res = {}
+    new_lines = ""
+    for line in lines:
+        if line.startswith("ATOM "):
+            aname, anumb, resname, chain, resnumb, x, y, z = read_pdb_line(line)
+
+            if chain == " ":
+                chain = "_"
+
+            insertion_code = line[26]
+            if insertion_code.strip():
+                new_res_trigger = False
+                if inserted_block != insertion_code:
+                    ninsertions += 1
+                    new_res_trigger = True
+
+                inserted_block = insertion_code
+                resnumb_offset = insertion_offset + ninsertions
+                resnumb += resnumb_offset
+
+                if new_res_trigger:
+                    while (
+                        chain in renumbered_res.keys()
+                        and resnumb in renumbered_res[chain].keys()
+                    ):
+                        resnumb += 1
+                        ninsertions += 1
+                    if resnumb not in renumbered_res.keys():
+                        if chain not in renumbered_res:
+                            renumbered_res[chain] = {}
+                        renumbered_res[chain][resnumb] = (
+                            resnumb - resnumb_offset,
+                            insertion_code,
+                        )
+            else:
+                ninsertions = -1
+
+            new_line = new_pdb_line(
+                anumb,
+                aname,
+                resname,
+                resnumb,
+                x,
+                y,
+                z,
+                chain=chain,
+            )
+            new_lines += new_line
+
+    with open(pdb_out, "w") as f:
+        f.write(new_lines)
+
+    return renumbered_res
+
+
+def mend_pdb(
+    pdb_to_clean, pdb_cleaned, ff, ffout, logfile="LOG_pdb2pqr", hopt=True, debug=False
+):
+    pdb_fixed = pdb_to_clean.replace(".pdb", "_fixed.pdb")
+    renumbered_res = correct_insertion_codes(pdb_to_clean, pdb_fixed)
     try:
         # TODO: Port pdb2pqr to py3 and import it as a module
         cmd = (
             "python2 {0}/pdb2pqr/pdb2pqr.py {1} {2} "
             "--ff {3} --ffout {4} --drop-water -v --chain {6} > {5} 2>&1 ".format(
                 SCRIPT_DIR,
-                pdb_to_clean,
+                pdb_fixed,
                 pdb_cleaned,
                 ff,
                 ffout,
@@ -39,6 +104,9 @@ def mend_pdb(pdb_to_clean, pdb_cleaned, ff, ffout, logfile="LOG_pdb2pqr", hopt=T
                 e.stderr.decode("ascii")
             )
         )
+    if not debug:
+        os.system("rm -f {}".format(pdb_fixed))
+    return renumbered_res
 
 
 def add_tautomers(
@@ -119,9 +187,7 @@ def correct_names(resnumb, resname, aname, titrating_sites, termini):
     return aname, resname
 
 
-def prepare_for_addHtaut(
-    pdb_in, pdb_out, chains_res, to_exclude, terminal_offset=5000, insertion_offset=3000
-):
+def prepare_for_addHtaut(pdb_in, pdb_out, chains_res, to_exclude, terminal_offset=5000):
     with open(pdb_in) as f:
         content = f.readlines()
 
@@ -144,9 +210,6 @@ def prepare_for_addHtaut(
     removed_pdb_lines = []
     resnumb_max = 0
     chains = sites.keys()
-    ninsertions = -1
-    inserted_block = None
-    already_inserted = []
     for line in content:
         if line.startswith("ATOM"):
             termini_trigger = False
@@ -177,22 +240,6 @@ def prepare_for_addHtaut(
                     aname = "H"
                 else:
                     continue
-
-            insertion_code = line[26]
-            if insertion_code.strip():
-                new_res_trigger = False
-                if inserted_block != insertion_code:
-                    ninsertions += 1
-                    new_res_trigger = True
-
-                inserted_block = insertion_code
-                resnumb += insertion_offset + ninsertions
-
-                if new_res_trigger:
-                    while resnumb in already_inserted:
-                        resnumb += 1
-                    if resnumb not in already_inserted:
-                        already_inserted.append(resnumb)
 
             new_line = new_pdb_line(
                 anumb,
@@ -310,6 +357,7 @@ def identify_tit_sites(f_in, chains, nomenclature="PDB", add_ser_thr=False):
             (aname, anumb, resname, chain, resnumb, x, y, z) = read_pdb_line(line)
             insertion_code = line[26].strip()
             if insertion_code:
+                print("NOT CONSIDERING:", line)
                 continue
 
             last_res = resnumb
