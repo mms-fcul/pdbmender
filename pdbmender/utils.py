@@ -11,7 +11,9 @@ from pdbmender.constants import (
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def correct_insertion_codes(pdb_in, pdb_out, insertion_offset=3000):
+def correct_insertion_codes(
+    pdb_in, pdb_out, replace_empty_chain=True, insertion_offset=3000
+):
     with open(pdb_in) as f:
         lines = f.readlines()
 
@@ -23,7 +25,7 @@ def correct_insertion_codes(pdb_in, pdb_out, insertion_offset=3000):
         if line.startswith("ATOM "):
             aname, anumb, resname, chain, resnumb, x, y, z = read_pdb_line(line)
 
-            if chain == " ":
+            if replace_empty_chain and chain == " ":
                 chain = "_"
 
             insertion_code = line[26]
@@ -65,6 +67,8 @@ def correct_insertion_codes(pdb_in, pdb_out, insertion_offset=3000):
                 chain=chain,
             )
             new_lines += new_line
+        else:
+            new_lines += line
 
     with open(pdb_out, "w") as f:
         f.write(new_lines)
@@ -357,7 +361,7 @@ def identify_tit_sites(f_in, chains, nomenclature="PDB", add_ser_thr=False):
             (aname, anumb, resname, chain, resnumb, x, y, z) = read_pdb_line(line)
             insertion_code = line[26].strip()
             if insertion_code:
-                print("NOT CONSIDERING:", line)
+                print("NOT CONSIDERING:", line.strip())
                 continue
 
             last_res = resnumb
