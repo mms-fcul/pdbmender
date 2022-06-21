@@ -440,6 +440,22 @@ class HIS(Amino):
         #    else: # Default to HID
         #        if self.hasAtom("HE2"): self.removeAtom("HE2")
 
+        state = "HI2"
+        if "HIP" not in self.patches and self.name not in ["HIP", "HSP"]:
+            if self.getAtom("ND1").hdonor and not self.getAtom("ND1").hacceptor:
+                if self.hasAtom("HE2"):
+                    state = "HI0"
+            elif self.getAtom("NE2").hdonor and not self.getAtom("NE2").hacceptor:
+                if self.hasAtom("HD1"):
+                    state = "HI1"
+            elif self.getAtom("ND1").hacceptor and not self.getAtom("ND1").hdonor:
+                if self.hasAtom("HD1"):
+                    state = "HI1"
+            else:  # Default to HID
+                if self.hasAtom("HE2"):
+                    state = "HI0"
+
+        print "UPDATE HIS STATE: {} {}".format(self.resSeq, state)
         self.ffname = "HIP"
         Amino.setState(self)
 

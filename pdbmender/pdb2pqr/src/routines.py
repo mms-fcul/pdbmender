@@ -139,7 +139,7 @@ class Routines:
             for atom in residue.getAtoms():
                 rname, aname = forcefield.getNames(resname, atom.name)
 
-                print(residue.name, atom.name, rname, aname)
+                # print(residue.name, atom.name, rname, aname)
 
                 if resname not in ['LIG', 'WAT', 'ACE', 'NME'] and rname != None:
                     try:
