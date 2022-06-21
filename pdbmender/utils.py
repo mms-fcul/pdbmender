@@ -312,6 +312,16 @@ def get_cys_bridges(f_pdb2pqr_log):
     return CYS_bridges
 
 
+def get_his_states(f_pdb2pqr_log):
+    HIS_states = {}
+    with open(f_pdb2pqr_log) as f:
+        for line in f:
+            if "UPDATE HIS STATE:" in line:
+                resnumb, state = line.split()[-2:]
+                HIS_states[resnumb] = state
+    return HIS_states
+
+
 def identify_cter(inputpqr, cur_ctrs):
     new_ctrs = {}
     with open(inputpqr) as f:
