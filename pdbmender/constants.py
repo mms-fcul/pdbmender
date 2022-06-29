@@ -65,3 +65,16 @@ PROTEIN_RESIDUES = (
     "NTR",
     "CTR",
 )
+
+CHARMM_protomers = {
+    "ASP": {"ASPP": {}, "ASP": {}},
+    "CYS": {"CYS": {}, "CYSM": {}},
+    "GLU": {"GLUP": {}, "GLU": {}},
+    "HIS": {"HSD": {}, "HSE": {}, "HSP": {}},
+    "TYR": {"TYR": {}},
+    "LYS": {"LYS": {}},
+    "SER": {"SER": {}},
+    "THR": {"THR": {}},
+    "NTR": {},
+    "CTR": {},
+}

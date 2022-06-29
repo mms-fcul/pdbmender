@@ -2,6 +2,7 @@ import os
 import subprocess
 from pdbmender.formats import read_pdb_line, new_pdb_line
 from pdbmender.constants import (
+    CHARMM_protomers,
     PROTEIN_RESIDUES,
     TITRATABLE_RESIDUES,
     RESIDUE_REFSTATE,
@@ -124,7 +125,12 @@ def add_tautomers(
     terminal_offset=5000,
 ):
     removed_pdb = prepare_for_addHtaut(
-        pdb_in, pdb_prep, chains_res, to_exclude, terminal_offset=terminal_offset
+        pdb_in,
+        pdb_prep,
+        chains_res,
+        to_exclude,
+        ff_family,
+        terminal_offset=terminal_offset,
     )
     sites_addHtaut = select_tautomer_sites(chains_res)
     if len(sites_addHtaut.strip()) == 0:
@@ -191,7 +197,9 @@ def correct_names(resnumb, resname, aname, titrating_sites, termini):
     return aname, resname
 
 
-def prepare_for_addHtaut(pdb_in, pdb_out, chains_res, to_exclude, terminal_offset=5000):
+def prepare_for_addHtaut(
+    pdb_in, pdb_out, chains_res, to_exclude, ff, terminal_offset=5000
+):
     with open(pdb_in) as f:
         content = f.readlines()
 
@@ -241,7 +249,10 @@ def prepare_for_addHtaut(pdb_in, pdb_out, chains_res, to_exclude, terminal_offse
                 if aname == "O1":
                     aname = "O"
                 elif aname == "H1":
-                    aname = "H"
+                    if ff == "GROMOS":
+                        aname = "H"
+                    elif ff == "CHARMM":
+                        aname = "HN"
                 else:
                     continue
 
@@ -340,10 +351,12 @@ def identify_cter(inputpqr, cur_ctrs):
                         "OXT",
                     )
                     and chain in cur_ctrs
-                    and resnumb != cur_ctrs[chain]
+                    and resnumb not in cur_ctrs[chain]
                     and resname in [*TITRATABLE_RESIDUES, *PROTEIN_RESIDUES, "CY0"]
                 ):
-                    new_ctrs[chain] = resnumb
+                    if chain not in new_ctrs:
+                        new_ctrs[chain] = []
+                    new_ctrs[chain].append(resnumb)
 
     return new_ctrs
 
@@ -388,7 +401,11 @@ def identify_tit_sites(f_in, chains, nomenclature="PDB", add_ser_thr=False):
 
                 if resname in PROTEIN_RESIDUES or resname in TITRATABLE_RESIDUES:
                     if resnumb not in chain_sites:
-                        if not chain_res[chain] and not skip_NTR[chain]:
+                        if (
+                            not chain_res[chain]
+                            and not skip_NTR[chain]
+                            and aname in ("H1", "H2", "H3", "N")
+                        ):
                             if resname == "PRO":
                                 skip_NTR[chain] = True
                                 continue
@@ -401,7 +418,7 @@ def identify_tit_sites(f_in, chains, nomenclature="PDB", add_ser_thr=False):
                         ) and (resname not in ("SER", "THR") or add_ser_thr):
                             chain_res = add_site(chain_res, chain, resnumb, resname)
 
-                    if "CTR" not in chain_sites and aname in (
+                    if aname in (
                         "CT",
                         "OT",
                         "OT1",
@@ -412,7 +429,7 @@ def identify_tit_sites(f_in, chains, nomenclature="PDB", add_ser_thr=False):
                     ):
                         chain_res = add_site(chain_res, chain, resnumb, "CTR")
 
-    if "CTR" not in chain_sites and aname in (
+    if aname in (
         "CT",
         "OT",
         "OT1",

@@ -77,6 +77,9 @@ def gro2pdb(f_in, f_out):
 
                 x, y, z = x * 10, y * 10, z * 10
 
+                if resnumb >= 9999:
+                    resnumb -= 9999 * int(resnumb / 9999)
+
                 new_pdb_content += new_pdb_line(
                     anumb, aname, resname, resnumb, x, y, z, chain="A"
                 )
