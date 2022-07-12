@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pdbmender"
-version = "0.5.0"
+version = "0.5.1"
 description = "Mend PDB files"
 authors = ["Pedro B.P.S. Reis <pdreis@fc.ul.pt>"]
 license = "MIT"

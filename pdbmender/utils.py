@@ -370,7 +370,6 @@ def identify_tit_sites(f_in, chains, nomenclature="PDB", add_ser_thr=False):
         return chain_res
 
     chain_res = {chain: {} for chain in chains}
-    skip_NTR = {chain: False for chain in chains}
     last_res = None
     with open(f_in) as f:
         content = f.readlines()
@@ -378,6 +377,7 @@ def identify_tit_sites(f_in, chains, nomenclature="PDB", add_ser_thr=False):
     nline = 0
     resnumb = None
     resname = None
+    skip_NTR = {chain: False for chain in chains}
     for line in content:
         nline += 1
         if line.startswith("ATOM "):
@@ -403,9 +403,9 @@ def identify_tit_sites(f_in, chains, nomenclature="PDB", add_ser_thr=False):
                     if resnumb not in chain_sites:
                         if (
                             not chain_res[chain]
-                            and not skip_NTR[chain]
                             and aname in ("H1", "H2", "H3", "N")
-                        ):
+                            and not skip_NTR[chain]:
+                        ) or (aname in ("H1", "H2", "H3")):
                             if resname == "PRO":
                                 skip_NTR[chain] = True
                                 continue
