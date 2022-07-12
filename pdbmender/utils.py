@@ -404,7 +404,7 @@ def identify_tit_sites(f_in, chains, nomenclature="PDB", add_ser_thr=False):
                         if (
                             not chain_res[chain]
                             and aname in ("H1", "H2", "H3", "N")
-                            and not skip_NTR[chain]:
+                            and not skip_NTR[chain]
                         ) or (aname in ("H1", "H2", "H3")):
                             if resname == "PRO":
                                 skip_NTR[chain] = True
