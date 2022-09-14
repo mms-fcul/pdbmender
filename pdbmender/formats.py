@@ -1,14 +1,14 @@
-def new_pdb_line(aID, aname, resname, resnumb, x, y, z, chain=" "):
-    pdb_format = "ATOM  {:5d} {:4s} {:4s}{:1s}{:4d}    {:8.3f}{:8.3f}{:8.3f}\n"
-    return pdb_format.format(aID, aname, resname, chain, resnumb, x, y, z)
+def new_pdb_line(aID, aname, resname, resnumb, x, y, z, chain=" ", icode=" "):
+    pdb_format = "ATOM  {:5d} {:4s} {:4s}{:1s}{:4d}{:1s}   {:8.3f}{:8.3f}{:8.3f}\n"
+    return pdb_format.format(aID, aname, resname, chain, resnumb, icode, x, y, z)
 
 
-def new_pqr_line(aID, aname, resname, resnumb, x, y, z, charge, radius, chain=" "):
+def new_pqr_line(aID, aname, resname, resnumb, x, y, z, charge, radius, chain=" ", icode=" "):
     pdb_format = (
-        "ATOM  {:5d} {:4s} {:4s}{:1s}{:4d}    {:8.3f}{:8.3f}{:8.3f}{:8.3f}{:8.3f}\n"
+        "ATOM  {:5d} {:4s} {:4s}{:1s}{:4d}{:1s}   {:8.3f}{:8.3f}{:8.3f}{:8.3f}{:8.3f}\n"
     )
     return pdb_format.format(
-        aID, aname, resname, chain, resnumb, x, y, z, charge, radius
+        aID, aname, resname, chain, resnumb, icode, x, y, z, charge, radius
     )
 
 
