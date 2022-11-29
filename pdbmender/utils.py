@@ -85,7 +85,7 @@ def mend_pdb(
     try:
         # TODO: Port pdb2pqr to py3 and import it as a module
         cmd = (
-            "python2 {0}/pdb2pqr/pdb2pqr.py {1} {2} "
+            "python2.7 {0}/pdb2pqr/pdb2pqr.py {1} {2} "
             "--ff {3} --ffout {4} --drop-water -v --chain {6} > {5} 2>&1 ".format(
                 SCRIPT_DIR,
                 pdb_fixed,
